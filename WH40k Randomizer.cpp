@@ -17,47 +17,25 @@ class Orks;
 struct Unit;
 
 // Typedefs
-typedef std::pair<std::string, int> DetachmentSlot;
-typedef std::vector<DetachmentSlot> DetachmentRoster;
+typedef std::pair<std::string, int> Selection; // Key & index for unit selecting
+typedef std::vector<Selection> SelectionList;
 typedef std::vector<Unit> UnitList;
+typedef std::vector<Enhancement> EnhancementList;
 
 // Unit data structure
 struct Unit {
     std::string model_name = {};
     int models_owned = 0;
     int models_used = 0;
-    std::string model_type = {};
-    int points_per_model = 0;
-    int min_unit_size = 0;
-    int max_unit_size = 0;
-    bool requiredWarlord = false;
-    std::vector<std::string> available_warlordtraits = {};
-    std::vector<std::string> available_relics = {};
-    std::vector<std::string> available_kustomjobs = {};
-    std::vector<int> kustomjobs_costs = {};
+    std::vector<int> points_per_unit = { 0 };
+    std::vector<int> unit_sizes = { 0 };
+    bool required_warlord = false;
+    bool is_character = false;
 };
-struct WargearInput
-{
-    std::string key = "None";
-    int unit_size = 1;
-    int max_points = 0;
-    bool take_trait = false;
-    bool take_relic = false;
-    bool take_kustomjob = false;
-    std::vector<std::string> taken_traits = {};
-    std::vector<std::string> taken_relics = {};
-    std::vector<std::string> taken_kustomjobs = {};
-};
-struct WargearOutput
-{
-    std::string output = "None";
-    int points = 0;
-    bool took_trait = false;
-    std::string took_trait_name = {};
-    bool took_relic = false;
-    std::string took_relic_name = {};
-    bool took_kustomjob = false;
-    std::string took_kustomjob_name = {};
+struct Enhancement {
+    std::string enhancement_name = {};
+    bool trait_taken = false;
+    int points_cost = 0;
 };
 
 bool isKeyInVector(std::string key, const std::vector<std::string>& values)
@@ -83,14 +61,8 @@ class Orks
 public:
 
     UnitList ork_units;
-
     std::string faction = "Orks";
-    std::vector<std::string> subfactions = {};
-    int total_subfactions;
-
-    // Orks get one free relic
-    // Strategem: Extra Gubbinz can be used 1 time in a 1k game, and 2 times in a 2k game
-    // Strategem: Big Boss can be used 1 time in a 1k game, and 2 times in a 2k game
+    EnhancementList ork_enhancements;
 
     Orks()
     {
@@ -99,13 +71,10 @@ public:
         beastboss.model_name = "Beastboss";
         beastboss.models_owned = 1;
         beastboss.models_used = 0;
-        beastboss.model_type = "HQ";
-        beastboss.points_per_model = 95;
-        beastboss.min_unit_size = 1;
-        beastboss.max_unit_size = 1;
-        beastboss.available_warlordtraits = { "Follow Me, Ladz!", "Big Gob", "'Ard as Nails", "Brutal but Kunnin", "Kunnin but Brutal", "Might is Right", "Clan-specific Trait", "Inspiring Leader", "Big Killa Boss", "BeastGob", "Half-chewed" };
-        beastboss.available_relics = { "Beasthide Mantle", "Headwoppa's Killchoppa", "Super Cybork Body", "Clan-specific Relic" };
-        beastboss.requiredWarlord = true;
+        beastboss.points_per_unit = { 80 };
+        beastboss.unit_sizes = { 1 };
+        beastboss.required_warlord = false;
+        beastboss.is_character = true;
         ork_units.push_back(beastboss);
 
         // Big Mek in Mega Armor
@@ -113,40 +82,21 @@ public:
         bigmekinmegaarmor.model_name = "Big Mek in Mega Armor";
         bigmekinmegaarmor.models_owned = 1;
         bigmekinmegaarmor.models_used = 0;
-        bigmekinmegaarmor.model_type = "HQ";
-        bigmekinmegaarmor.points_per_model = 85;
-        bigmekinmegaarmor.min_unit_size = 1;
-        bigmekinmegaarmor.max_unit_size = 1;
-        bigmekinmegaarmor.available_warlordtraits = { "Follow Me, Ladz!", "Big Gob", "'Ard as Nails", "Brutal but Kunnin", "Kunnin but Brutal", "Might is Right", "Inspiring Leader", "Clan-specific Trait" };
-        bigmekinmegaarmor.available_relics = { "Da Killa Klaw", "Da Krushin' Armor", "Super Cybork Body", "Clan-specific Relic"};
-        bigmekinmegaarmor.available_kustomjobs = { "Bionik Oiler" };
-        bigmekinmegaarmor.kustomjobs_costs = { 10 };
+        bigmekinmegaarmor.points_per_unit = { 100 };
+        bigmekinmegaarmor.unit_sizes = { 1 };
+        bigmekinmegaarmor.required_warlord = false;
+        bigmekinmegaarmor.is_character = true;
         ork_units.push_back(bigmekinmegaarmor);
-
-        // Da Red Gobbo on Bounca
-        Unit daredgobboonbounca;
-        daredgobboonbounca.model_name = "Da Red Gobbo on Bounca";
-        daredgobboonbounca.models_owned = 1;
-        daredgobboonbounca.models_used = 0;
-        daredgobboonbounca.model_type = "HQ";
-        daredgobboonbounca.points_per_model = 50;
-        daredgobboonbounca.min_unit_size = 1;
-        daredgobboonbounca.max_unit_size = 1;
-        daredgobboonbounca.available_warlordtraits = { "Inspiring Leader" };
-        ork_units.push_back(daredgobboonbounca);
 
         // Deffkilla Wartrike
         Unit deffkillawartrike;
         deffkillawartrike.model_name = "Deffkilla Wartrike";
         deffkillawartrike.models_owned = 1;
         deffkillawartrike.models_used = 0;
-        deffkillawartrike.model_type = "HQ";
-        deffkillawartrike.points_per_model = 120;
-        deffkillawartrike.min_unit_size = 1;
-        deffkillawartrike.max_unit_size = 1;
-        deffkillawartrike.available_warlordtraits = { "Follow Me, Ladz!", "Big Gob", "'Ard as Nails", "Brutal but Kunnin", "Kunnin but Brutal", "Might is Right", "Inspiring Leader", "Clan-specific Trait", "Roadkilla", "Get Up in Their Faces", "Junkboss"};
-        deffkillawartrike.available_kustomjobs = { "More Dakka", "Shokka Hull", "Squig-hide Tyres" };
-        deffkillawartrike.kustomjobs_costs = { 15, 15, 15 };
+        deffkillawartrike.points_per_unit = { 90 };
+        deffkillawartrike.unit_sizes = { 1 };
+        deffkillawartrike.required_warlord = false;
+        deffkillawartrike.is_character = false;
         ork_units.push_back(deffkillawartrike);
 
         // Ghazghkull Thraka
@@ -154,49 +104,21 @@ public:
         ghazghkullthraka.model_name = "Ghazghkull Thraka";
         ghazghkullthraka.models_owned = 1;
         ghazghkullthraka.models_used = 0;
-        ghazghkullthraka.model_type = "HQ";
-        ghazghkullthraka.points_per_model = 300;
-        ghazghkullthraka.min_unit_size = 1;
-        ghazghkullthraka.max_unit_size = 1;
-        ghazghkullthraka.available_warlordtraits = { "Clan-specific Trait" };
-        ghazghkullthraka.requiredWarlord = true;
+        ghazghkullthraka.points_per_unit = { 235 };
+        ghazghkullthraka.unit_sizes = { 1 };
+        ghazghkullthraka.required_warlord = false;
+        ghazghkullthraka.is_character = false;
         ork_units.push_back(ghazghkullthraka);
-
-        // Goff Rokker
-        Unit goffrokker;
-        goffrokker.model_name = "Goff Rokker";
-        goffrokker.models_owned = 1;
-        goffrokker.models_used = 0;
-        goffrokker.model_type = "HQ";
-        goffrokker.points_per_model = 40;
-        goffrokker.min_unit_size = 1;
-        goffrokker.max_unit_size = 1;
-        goffrokker.available_warlordtraits = { "Follow Me, Ladz!", "Big Gob", "'Ard as Nails", "Brutal but Kunnin", "Kunnin but Brutal", "Might is Right", "Inspiring Leader", "Clan-specific Trait" };
-        ork_units.push_back(goffrokker);
-
-        // Makari
-        Unit makari;
-        makari.model_name = "Makari";
-        makari.models_owned = 1;
-        makari.models_used = 0;
-        makari.model_type = "HQ";
-        makari.points_per_model = 50;
-        makari.min_unit_size = 1;
-        makari.max_unit_size = 1;
-        makari.available_warlordtraits = { "Follow Me, Ladz!" };
-        ork_units.push_back(makari);
 
         // Painboss
         Unit painboss;
         painboss.model_name = "Painboss";
         painboss.models_owned = 1;
         painboss.models_used = 0;
-        painboss.model_type = "HQ";
-        painboss.points_per_model = 80;
-        painboss.min_unit_size = 1;
-        painboss.max_unit_size = 1;
-        painboss.available_warlordtraits = { "Follow Me, Ladz!", "Big Gob", "'Ard as Nails", "Brutal but Kunnin", "Kunnin but Brutal", "Might is Right", "Inspiring Leader", "Clan-specific Trait", "Big Killa Boss", "BeastGob", "Half-Chewed"};
-        painboss.available_relics = { "Beasthide Mantle", "Clan-specific Relic", "Super Cybork Body" };
+        painboss.points_per_unit = { 70 };
+        painboss.unit_sizes = { 1 };
+        painboss.required_warlord = false;
+        painboss.is_character = false;
         ork_units.push_back(painboss);
 
         // Warboss in Mega Armor
@@ -204,13 +126,10 @@ public:
         warbossinmegaarmor.model_name = "Warboss in Mega Armor";
         warbossinmegaarmor.models_owned = 2;
         warbossinmegaarmor.models_used = 0;
-        warbossinmegaarmor.model_type = "HQ";
-        warbossinmegaarmor.points_per_model = 115;
-        warbossinmegaarmor.min_unit_size = 1;
-        warbossinmegaarmor.max_unit_size = 1;
-        warbossinmegaarmor.available_warlordtraits = { "Follow Me, Ladz!", "Big Gob", "'Ard as Nails", "Brutal but Kunnin", "Kunnin but Brutal", "Might is Right", "Inspiring Leader", "Clan-specific Trait" };
-        warbossinmegaarmor.available_relics = { "Da Krushin' Armor", "Headwoppa's Killchoppa", "Super Cybork Body", "Clan-specific Relic" };
-        warbossinmegaarmor.requiredWarlord = true;
+        warbossinmegaarmor.points_per_unit = { 95 };
+        warbossinmegaarmor.unit_sizes = { 1 };
+        warbossinmegaarmor.required_warlord = false;
+        warbossinmegaarmor.is_character = false;
         ork_units.push_back(warbossinmegaarmor);
 
         // Weirdboy
@@ -218,12 +137,10 @@ public:
         weirdboy.model_name = "Weirdboy";
         weirdboy.models_owned = 1;
         weirdboy.models_used = 0;
-        weirdboy.model_type = "HQ";
-        weirdboy.points_per_model = 70;
-        weirdboy.min_unit_size = 1;
-        weirdboy.max_unit_size = 1;
-        weirdboy.available_warlordtraits = { "Follow Me, Ladz!", "Big Gob", "'Ard as Nails", "Brutal but Kunnin", "Kunnin but Brutal", "Might is Right", "Inspiring Leader", "Clan-specific Trait" };
-        weirdboy.available_relics = { "Clan-specific Relic", "Scorched Gitbonez", "Super Cybork Body" };
+        weirdboy.points_per_unit = { 55 };
+        weirdboy.unit_sizes = { 1 };
+        weirdboy.required_warlord = false;
+        weirdboy.is_character = false;
         ork_units.push_back(weirdboy);
 
         // Zodgrod Wortsnagga
@@ -231,11 +148,10 @@ public:
         zodgrodwortsnagga.model_name = "Zodgrod Wortsnagga";
         zodgrodwortsnagga.models_owned = 1;
         zodgrodwortsnagga.models_used = 0;
-        zodgrodwortsnagga.model_type = "HQ";
-        zodgrodwortsnagga.points_per_model = 65;
-        zodgrodwortsnagga.min_unit_size = 1;
-        zodgrodwortsnagga.max_unit_size = 1;
-        zodgrodwortsnagga.available_warlordtraits = { "BeastGob" };
+        zodgrodwortsnagga.points_per_unit = { 80 };
+        zodgrodwortsnagga.unit_sizes = { 1 };
+        zodgrodwortsnagga.required_warlord = false;
+        zodgrodwortsnagga.is_character = false;
         ork_units.push_back(zodgrodwortsnagga);
 
         // Beast Snagga Boyz
@@ -243,10 +159,10 @@ public:
         beastsnaggaboyz.model_name = "Beast Snagga Boyz";
         beastsnaggaboyz.models_owned = 10;
         beastsnaggaboyz.models_used = 0;
-        beastsnaggaboyz.model_type = "Troops";
-        beastsnaggaboyz.points_per_model = 10;
-        beastsnaggaboyz.min_unit_size = 10;
-        beastsnaggaboyz.max_unit_size = 20;
+        beastsnaggaboyz.points_per_unit = { 105, 210 };
+        beastsnaggaboyz.unit_sizes = { 10, 20 };
+        beastsnaggaboyz.required_warlord = false;
+        beastsnaggaboyz.is_character = false;
         ork_units.push_back(beastsnaggaboyz);
 
         // Boyz
@@ -254,10 +170,10 @@ public:
         boyz.model_name = "Boyz";
         boyz.models_owned = 40;
         boyz.models_used = 0;
-        boyz.model_type = "Troops";
-        boyz.points_per_model = 8;
-        boyz.min_unit_size = 10;
-        boyz.max_unit_size = 30;
+        boyz.points_per_unit = { 85, 170 };
+        boyz.unit_sizes = { 10, 20 };
+        boyz.required_warlord = false;
+        boyz.is_character = false;
         ork_units.push_back(boyz);
 
         // Gretchin
@@ -265,10 +181,10 @@ public:
         gretchin.model_name = "Gretchin";
         gretchin.models_owned = 20;
         gretchin.models_used = 0;
-        gretchin.model_type = "Troops";
-        gretchin.points_per_model = 4;
-        gretchin.min_unit_size = 10;
-        gretchin.max_unit_size = 30;
+        gretchin.points_per_unit = { 45, 90 };
+        gretchin.unit_sizes = { 10, 20 };
+        gretchin.required_warlord = false;
+        gretchin.is_character = false;
         ork_units.push_back(gretchin);
 
         // Kommandos
@@ -276,21 +192,21 @@ public:
         kommandos.model_name = "Kommandos";
         kommandos.models_owned = 10;
         kommandos.models_used = 0;
-        kommandos.model_type = "Elites";
-        kommandos.points_per_model = 11;
-        kommandos.min_unit_size = 5;
-        kommandos.max_unit_size = 15;
+        kommandos.points_per_unit = { 135 };
+        kommandos.unit_sizes = { 10 };
+        kommandos.required_warlord = false;
+        kommandos.is_character = false;
         ork_units.push_back(kommandos);
 
         // Meganobz
         Unit meganobz;
         meganobz.model_name = "Meganobz";
-        meganobz.models_owned = 3;
+        meganobz.models_owned = 2;
         meganobz.models_used = 0;
-        meganobz.model_type = "Elites";
-        meganobz.points_per_model = 30;
-        meganobz.min_unit_size = 3;
-        meganobz.max_unit_size = 10;
+        meganobz.points_per_unit = { 65, 100, 165, 200 };
+        meganobz.unit_sizes = { 2, 3, 5, 6 };
+        meganobz.required_warlord = false;
+        meganobz.is_character = false;
         ork_units.push_back(meganobz);
 
         // DeffKoptas
@@ -298,10 +214,10 @@ public:
         deffkoptas.model_name = "Deffkoptas";
         deffkoptas.models_owned = 6;
         deffkoptas.models_used = 0;
-        deffkoptas.model_type = "Fast Attack";
-        deffkoptas.points_per_model = 50;
-        deffkoptas.min_unit_size = 3;
-        deffkoptas.max_unit_size = 6;
+        deffkoptas.points_per_unit = { 115, 230 };
+        deffkoptas.unit_sizes = { 3, 6 };
+        deffkoptas.required_warlord = false;
+        deffkoptas.is_character = false;
         ork_units.push_back(deffkoptas);
 
         // Megatrakk Scrapjets
@@ -309,12 +225,10 @@ public:
         megatrakkscrapjets.model_name = "Megatrakk Scrapjets";
         megatrakkscrapjets.models_owned = 1;
         megatrakkscrapjets.models_used = 0;
-        megatrakkscrapjets.model_type = "Fast Attack";
-        megatrakkscrapjets.points_per_model = 100;
-        megatrakkscrapjets.min_unit_size = 1;
-        megatrakkscrapjets.max_unit_size = 3;
-        megatrakkscrapjets.available_kustomjobs = { "More Dakka", "Shokka Hull", "Squig-hide Tyres" };
-        megatrakkscrapjets.kustomjobs_costs = { 15, 15, 15 };
+        megatrakkscrapjets.points_per_unit = { 90 };
+        megatrakkscrapjets.unit_sizes = { 1 };
+        megatrakkscrapjets.required_warlord = false;
+        megatrakkscrapjets.is_character = false;
         ork_units.push_back(megatrakkscrapjets);
 
         // Nob on Smasha Squig
@@ -322,12 +236,10 @@ public:
         nobonsmashasquig.model_name = "Nob on Smasha Squig";
         nobonsmashasquig.models_owned = 1;
         nobonsmashasquig.models_used = 0;
-        nobonsmashasquig.model_type = "Fast Attack";
-        nobonsmashasquig.points_per_model = 65;
-        nobonsmashasquig.min_unit_size = 1;
-        nobonsmashasquig.max_unit_size = 3;
-        nobonsmashasquig.available_warlordtraits = { "Follow Me, Ladz!", "Big Gob", "'Ard as Nails", "Brutal but Kunnin", "Kunnin but Brutal", "Might is Right", "Inspiring Leader", "Clan-specific Trait", "Big Killa Boss", "BeastGob", "Half-Chewed" };
-        nobonsmashasquig.available_relics = { "Beasthide Mantle", "Headwoppa's Killchoppa", "Clan-specific Relic" };
+        nobonsmashasquig.points_per_unit = { 75 };
+        nobonsmashasquig.unit_sizes = { 1 };
+        nobonsmashasquig.required_warlord = false;
+        nobonsmashasquig.is_character = false;
         ork_units.push_back(nobonsmashasquig);
 
         // Rukkatrukk Squigbuggies
@@ -335,12 +247,10 @@ public:
         rukkatrukksquigbuggies.model_name = "Rukkatrukk Squigbuggies";
         rukkatrukksquigbuggies.models_owned = 1;
         rukkatrukksquigbuggies.models_used = 0;
-        rukkatrukksquigbuggies.model_type = "Fast Attack";
-        rukkatrukksquigbuggies.points_per_model = 95;
-        rukkatrukksquigbuggies.min_unit_size = 1;
-        rukkatrukksquigbuggies.max_unit_size = 3;
-        rukkatrukksquigbuggies.available_kustomjobs = { "More Dakka", "Nitro Squigs", "Shokka Hull", "Squig-hide Tyres" };
-        rukkatrukksquigbuggies.kustomjobs_costs = { 15, 25, 15, 15 };
+        rukkatrukksquigbuggies.points_per_unit = { 110 };
+        rukkatrukksquigbuggies.unit_sizes = { 1 };
+        rukkatrukksquigbuggies.required_warlord = false;
+        rukkatrukksquigbuggies.is_character = false;
         ork_units.push_back(rukkatrukksquigbuggies);
 
         // Squighog Boyz
@@ -348,10 +258,10 @@ public:
         squighogboyz.model_name = "Squighog Boys";
         squighogboyz.models_owned = 3;
         squighogboyz.models_used = 0;
-        squighogboyz.model_type = "Fast Attack";
-        squighogboyz.points_per_model = 25;
-        squighogboyz.min_unit_size = 3;
-        squighogboyz.max_unit_size = 6;
+        squighogboyz.points_per_unit = { 110, 220 };
+        squighogboyz.unit_sizes = { 3, 6};
+        squighogboyz.required_warlord = false;
+        squighogboyz.is_character = false;
         ork_units.push_back(squighogboyz);
 
         // Warbikers
@@ -359,10 +269,10 @@ public:
         warbikers.model_name = "Warbikers";
         warbikers.models_owned = 3;
         warbikers.models_used = 0;
-        warbikers.model_type = "Fast Attack";
-        warbikers.points_per_model = 25;
-        warbikers.min_unit_size = 3;
-        warbikers.max_unit_size = 9;
+        warbikers.points_per_unit = { 75, 150 };
+        warbikers.unit_sizes = { 3, 6};
+        warbikers.required_warlord = false;
+        warbikers.is_character = false;
         ork_units.push_back(warbikers);
 
         // Battlewagon
@@ -370,12 +280,10 @@ public:
         battlewagon.model_name = "Battlewagon";
         battlewagon.models_owned = 1;
         battlewagon.models_used = 0;
-        battlewagon.model_type = "Heavy Support";
-        battlewagon.points_per_model = 105;
-        battlewagon.min_unit_size = 1;
-        battlewagon.max_unit_size = 1;
-        battlewagon.available_kustomjobs = { "Da Booma", "Fortress on Wheels", "More Dakka", "Shokka Hull", "Squig-hide Tyres" };
-        battlewagon.kustomjobs_costs = { 15, 20, 30, 15, 15 };
+        battlewagon.points_per_unit = { 185 };
+        battlewagon.unit_sizes = { 1 };
+        battlewagon.required_warlord = false;
+        battlewagon.is_character = false;
         ork_units.push_back(battlewagon);
 
         // Deff Dreads
@@ -383,12 +291,10 @@ public:
         deffdreads.model_name = "Deff Dreads";
         deffdreads.models_owned = 1;
         deffdreads.models_used = 0;
-        deffdreads.model_type = "Heavy Support";
-        deffdreads.points_per_model = 85;
-        deffdreads.min_unit_size = 1;
-        deffdreads.max_unit_size = 3;
-        deffdreads.available_kustomjobs = { "More Dakka", "Shokka Hull", "Stompamatic Pistons" };
-        deffdreads.kustomjobs_costs = { 15, 15, 15 };
+        deffdreads.points_per_unit = { 150 };
+        deffdreads.unit_sizes = { 1 };
+        deffdreads.required_warlord = false;
+        deffdreads.is_character = false;
         ork_units.push_back(deffdreads);
 
         // Kill Rig
@@ -396,14 +302,10 @@ public:
         killrig.model_name = "Kill Rig";
         killrig.models_owned = 1;
         killrig.models_used = 0;
-        killrig.model_type = "Heavy Support";
-        killrig.points_per_model = 190;
-        killrig.min_unit_size = 1;
-        killrig.max_unit_size = 1;
-        killrig.available_warlordtraits = { "BeastGob" };
-        killrig.available_relics = { "Scorched Gitbonez" };
-        killrig.available_kustomjobs = { "More Dakka", "Shokka Hull", "Squighide Tyres" };
-        killrig.kustomjobs_costs = { 30, 30, 15 };
+        killrig.points_per_unit = { 220 };
+        killrig.unit_sizes = { 1 };
+        killrig.required_warlord = false;
+        killrig.is_character = false;
         ork_units.push_back(killrig);
 
         // Mek Gunz
@@ -411,10 +313,10 @@ public:
         mekgunz.model_name = "Mek Gunz";
         mekgunz.models_owned = 1;
         mekgunz.models_used = 0;
-        mekgunz.model_type = "Heavy Support";
-        mekgunz.points_per_model = 40;
-        mekgunz.min_unit_size = 1;
-        mekgunz.max_unit_size = 3;
+        mekgunz.points_per_unit = { 45, 90, 135 };
+        mekgunz.unit_sizes = { 1, 2, 3 };
+        mekgunz.required_warlord = false;
+        mekgunz.is_character = false;
         ork_units.push_back(mekgunz);
 
         // Dakkajet
@@ -422,12 +324,10 @@ public:
         dakkajet.model_name = "Dakkajet";
         dakkajet.models_owned = 1;
         dakkajet.models_used = 0;
-        dakkajet.model_type = "Flyer";
-        dakkajet.points_per_model = 100;
-        dakkajet.min_unit_size = 1;
-        dakkajet.max_unit_size = 1;
-        dakkajet.available_kustomjobs = { "More Dakka", "Shokka Hull" };
-        dakkajet.kustomjobs_costs = { 15, 15 };
+        dakkajet.points_per_unit = { 135 };
+        dakkajet.unit_sizes = { 1 };
+        dakkajet.required_warlord = false;
+        dakkajet.is_character = false;
         ork_units.push_back(dakkajet);
 
         // Trukk
@@ -438,16 +338,38 @@ public:
         //models_owned.insert(std::make_pair("Gorkanaut", 1));
         //models_used.insert(std::make_pair("Gorkanaut", 0));
 
-        // Subfactions
-        subfactions.push_back("Bad Moons");
-        subfactions.push_back("Blood Axes");
-        subfactions.push_back("Deathskulls");
-        subfactions.push_back("Evil Sunz");
-        subfactions.push_back("Freebooterz");
-        subfactions.push_back("Goffs");
-        subfactions.push_back("Snakebites");
+        // --------------------------
+        //      ORK ENHANCEMENTS
+        // --------------------------
 
-        total_subfactions = static_cast<int>(subfactions.size());
+        // Follow Me Ladz
+        Enhancement followmeladz;
+        followmeladz.enhancement_name = "Follow Me Ladz";
+        followmeladz.trait_taken = false;
+        followmeladz.points_cost = 25;
+        ork_enhancements.push_back(followmeladz);
+
+        // Headwoppa's Killchoppa
+        Enhancement headwoppaskillchoppa;
+        headwoppaskillchoppa.enhancement_name = "Headwoppa's Killchoppa";
+        headwoppaskillchoppa.trait_taken = false;
+        headwoppaskillchoppa.points_cost = 20;
+        ork_enhancements.push_back(headwoppaskillchoppa);
+
+        // Kunnin' But Brutal
+        Enhancement kunninbutbrutal;
+        kunninbutbrutal.enhancement_name = "Kunnin' But Brutal";
+        kunninbutbrutal.trait_taken = false;
+        kunninbutbrutal.points_cost = 15;
+        ork_enhancements.push_back(kunninbutbrutal);
+
+        // Supa-Cybork Body
+        Enhancement supacyborkbody;
+        supacyborkbody.enhancement_name = "Supa-Cybork Body";
+        supacyborkbody.trait_taken = false;
+        supacyborkbody.points_cost = 15;
+        ork_enhancements.push_back(supacyborkbody);
+
     }
 
     //###################################################################
@@ -471,46 +393,17 @@ public:
     {
         return (lookupModelsOwned(key) - lookupModelsUsed(key));
     }
-    std::string lookupModelType(std::string key)
+    std::vector<int> lookupPointsPerUnit(std::string key)
     {
-        for (auto const& p : ork_units) { if (p.model_name == key) return p.model_type; }
-        return "Unknown";
-    }
-    int lookupPointsPerModel(std::string key)
-    {
-        for (auto const& p : ork_units) { if (p.model_name == key) return p.points_per_model; }
+        for (auto const& p : ork_units) { if (p.model_name == key) return p.points_per_unit; }
         return 0;
     }
-    int lookupMinUnitSize(std::string key)
+    std::vector<int> lookupUnitSize(std::string key)
     {
-        for (auto const& p : ork_units) { if (p.model_name == key) return p.min_unit_size; }
+        for (auto const& p : ork_units) { if (p.model_name == key) return p.unit_size; }
         return 0;
     }
-    int lookupMaxUnitSize(std::string key)
-    {
-        for (auto const& p : ork_units) { if (p.model_name == key) return p.max_unit_size; }
-        return 0;
-    }
-    std::vector<std::string> lookupAvailableWarlordTraits(std::string key) 
-    {
-        for (auto const& p : ork_units) { if (p.model_name == key) return p.available_warlordtraits; }
-        return {};
-    }
-    std::vector<std::string> lookupAvailableRelics(std::string key)
-    {
-        for (auto const& p : ork_units) { if (p.model_name == key) return p.available_relics; }
-        return {};
-    }
-    std::vector<std::string> lookupAvailableKustomJobs(std::string key)
-    {
-        for (auto const& p : ork_units) { if (p.model_name == key) return p.available_kustomjobs; }
-        return {};
-    }
-    std::vector<int> lookupKustomJobsCosts(std::string key)
-    {
-        for (auto const& p : ork_units) { if (p.model_name == key) return p.kustomjobs_costs; }
-        return {};
-    }
+
 
     // Setter functions
     void setModelsUsed(std::string key, int val)
@@ -524,73 +417,14 @@ public:
         return;
     }
 
-    // Counter functions
-    int countModelTypes(std::string key)
-    {
-        int count = 0;
-        for (auto const& p : ork_units) { if (p.model_type == key) count++; }
-        return count;
-    }
-    int countModelAvailableUnitsByType(std::string key) 
-    {
-        int count = 0;
-        for (auto const& p : ork_units) {if (p.model_type == key) count += (int)((p.models_owned - p.models_used) / p.min_unit_size);}
-        return count;
-    }
-    int countModelAvailableNonWarlordUnitsByType(std::string key)
-    {
-        int count = 0;
-        for (auto const& p : ork_units) { if ((p.model_type == key) && !p.requiredWarlord) count += (int)((p.models_owned - p.models_used) / p.min_unit_size); }
-        return count;
-    }
-    int countModelAvailableUnitsUnderCostByType(std::string key, int max_cost)
-    {
-        int count = 0;
-        int cost;
-        for (auto const& p : ork_units) {
-            if (p.model_type == key)
-            {
-                if (lookupModelsAvailable(p.model_name) >= p.min_unit_size) {
-                    cost = p.points_per_model * p.min_unit_size;
-                    if (cost <= max_cost) count++;
-                }
-            }
-        }
-        return count;
-    }
-    int countModelAvailableNonWarlordUnitsUnderCostByType(std::string key, int max_cost)
-    {
-        int count = 0;
-        int cost;
-        for (auto const& p : ork_units) {
-            if (p.model_type == key)
-            {
-                if (p.requiredWarlord == false) {
-                    if (lookupModelsAvailable(p.model_name) >= p.min_unit_size) {
-                        cost = p.points_per_model * p.min_unit_size;
-                        if (cost <= max_cost) count++;
-                    }
-                }
-            }
-        }
-        return count;
-    }
-
-
     // List functions
-    std::vector<std::string> listModelsByType (std::string key) 
+    SelectionList listModelsUnderCost(int cost)
     {
-        std::vector<std::string> result = {};
-        for (auto const& p : ork_units) { if (p.model_type == key) result.push_back(p.model_name); }
-        return result;
-    }
-    std::vector<std::string> listModelsUnderCost(int cost)
-    {
-        std::vector<std::string> result = {};
-        int max_cost;
+        SelectionList result = {};
         for (auto const& p : ork_units) {
-            max_cost = p.points_per_model * std::min(p.max_unit_size, lookupModelsAvailable(p.model_name));
-            if (cost <= max_cost) result.push_back(p.model_name); 
+            for (int i = 0; i < static_cast<int>(p.points_per_unit.size); i++) {
+                if (cost >= p.points_per_unit(i)) result.push_back({ p.model_name, i });
+            }
         }
         return result;
     }
